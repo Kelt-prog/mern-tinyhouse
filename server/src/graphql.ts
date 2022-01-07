@@ -1,12 +1,37 @@
-import { GraphQLObjectType, GraphQLString, GraphQLSchema } from "graphql";
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLSchema,
+  GraphQLList
+} from "graphql";
+import { listings } from "./listings";
+
+const Listing = new GraphQLObjectType({
+  name: "Listing",
+  fields: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    title: { type: new GraphQLNonNull(GraphQLString) },
+    image: { type: new GraphQLNonNull(GraphQLString) },
+    address: { type: new GraphQLNonNull(GraphQLString) },
+    price: { type: new GraphQLNonNull(GraphQLInt) },
+    numOfGuests: { type: new GraphQLNonNull(GraphQLInt) },
+    numbOfBeds: { type: new GraphQLNonNull(GraphQLInt) },
+    rating: { type: new GraphQLNonNull(GraphQLInt) }
+  }
+});
 
 const query = new GraphQLObjectType({
   name: "Query",
   fields: {
-    hello: {
-      type: GraphQLString,
+    listings: {
+      type: new GraphQLNonNull(new GraphQLList(Listing)),
 
-      resolve: () => "Hello from the query"
+      resolve: () => {
+        return listings;
+      }
     }
   }
 });
@@ -14,9 +39,20 @@ const query = new GraphQLObjectType({
 const mutation = new GraphQLObjectType({
   name: "Mutation",
   fields: {
-    hello: {
-      type: GraphQLString,
-      resolve: () => "Hello from the Mutation"
+    deleteListing: {
+      type: new GraphQLNonNull(Listing),
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLID) }
+      },
+      resolve: (_root, { id }) => {
+        for (let i = 0; i < listings.length; i++) {
+          if (listings[i].id === id) {
+            return listings.splice(i, 1)[0];
+          }
+
+          throw new Error("failed to delete listing");
+        }
+      }
     }
   }
 });
